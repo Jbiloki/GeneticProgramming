@@ -1,4 +1,4 @@
-;gnu clisp 2.49
+isp 2.49
 
 ;;(progn
 ;; (do until current pool filled ;; init population
@@ -19,12 +19,51 @@
 ;;current pool = next pool ))
 
 
-(defun main (n)
-    (progn
-            (setq pop ())
-	            (loop while(< (length pop) n)
-		                  do(setq pop(append pop '(1)))
-				          (write (length pop))
-					          )))
 
-						  (main 50)
+(defun get_fitness (rcritter)
+ "Get score for critter. Dummy fcn: just return its length."
+  (length rcritter))
+
+
+  (defun create_random_child ()
+      (setq child())
+          (setf op (random 3))
+	      (if (= op 0) (setf newop '+))
+	          (if (= op 1) (setf newop '-))
+		      (if (= op 2) (setf newop '*))
+		          (setf child (append child (list newop)))
+			      (setf numele (random 3))
+			          (loop while(>= numele 0) do
+				          (setf curnum (random 13))
+					          (cond
+						              ((< curnum 10) (setf posneg (random 2)))
+							                  ((= posneg 1) (- posneg))
+									              ((= curnum 10) (setq curnum 'x))
+										                  ((= curnum 11) (setq curnum 'y))
+												              ((= curnum 12) (setq curnum 'z)))
+													              (nconc child (list curnum))
+														              (decf numele))
+															              (return-from create_random_child child)
+																           )
+
+																	   (defun pop_fitness ( rpop ) ;; Pop is a population.
+																	    "Create Pop-Scored pairs (Score Critter) given Pop list of critters."
+																	         (mapcar #'(lambda (critter)
+																		      (let ((score (get_fitness critter)))
+																		           (list score critter)))
+																			        rpop))
+
+																				(defun main (n term)
+																				    (progn
+																				            (setf curgen 0)
+																					            
+																						            (setq pop ())
+																							            (loop while(< (length pop) n) do
+																								            (setf pop (append pop (list (create_random_child )))))
+																									            (loop while(< curgen term) do
+																										                  (+ curgen 1)
+																												                (write (pop_fitness pop)))
+																														              )
+																															              )
+																																      (main 50 10)
+
