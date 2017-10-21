@@ -1,4 +1,3 @@
-isp 2.49
 
 ;gnu clisp 2.49
 
