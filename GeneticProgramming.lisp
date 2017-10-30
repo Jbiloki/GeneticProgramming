@@ -1,12 +1,30 @@
 ;gnu clisp 2.49
 
-(setq x 0)
-(setq y -2)
-(setq z 1)
-(setq output -16)
+;Authors/Contact Info:
+;   Jacob Biloki
+;   Email: Bilokij@csu.fullerton.edu
+;   CWID: 891882573
+;   Joshua Christ
+
+; Program:
+; This program implements genetic programming to generate a random population of critters. Over generations the best
+; should be selected and crossed with a chance of mutation. They are judged by the distance from the target value and should
+; converge to it.
 
 
+;Set your golden critter here
+(setq x -4)
+(setq y -5)
+(setq z -3)
+(setq output 58)
+
+;Set population size global variable
+(setq pop-size 50)
+
+;Declare our random seed
 (setf *random-state* (make-random-state t))
+
+;;; PROVIDED HELPER FUNCTIONS ;;;
 (defun tree_nth_cell (rnth rtree)
   "Return the DFS N-th cell in the given tree: 1-based."
   (let ((size (cell_count rtree)))
@@ -62,12 +80,6 @@
                 (- rnth size1) ;; Account for skipping car subtree.
                 (cdr rtree))))))))) ;; Skip car subtree.
 
-;(defun random_tree_cell (list)
-;  "Returns a random element of LIST."
-;  (if (not (and (list) (listp list)))
-;      (return-from random_tree_cell (nth (random (1- (1+ (length list)))) list))
-;    (error "Argument to get-random-element not a list or the list is empty")))
-
 (defun random_tree_cell (rtree)
  "Return random cell in the tree, but not the whole tree."
   (setf rtree (flatten rtree))
@@ -81,6 +93,13 @@
  ;; (print (list :dbg size nth spot))
  spot))
 
+(defun pop_fitness ( rpop ) ;; Pop is a population.
+ "Create Pop-Scored pairs (Score Critter) given Pop list of critters."
+ (mapcar #'(lambda (critter)
+ (let ((score (get_fitness critter)))
+ (list score critter)))
+ rpop))
+
 (defun cell_count (rt)
   "Return the number of nodes/cells in the tree. Skip non-cells."
   (cond
@@ -92,99 +111,21 @@
 
 
 (defun make_kid (rmom rtgt rnew)
- "Return kid: copy of mom with tgt cell replaced by given new cell, or nil."
- (if (not (and rmom rtgt rnew
- (listp rmom)
- (listp rtgt)
- (listp rnew)))
- rmom
- (if (eq rmom rtgt)
- rnew
- (cons (make_kid (car rmom) rtgt rnew)
- (make_kid (cdr rmom) rtgt rnew)))))
+  "Return kid: copy of mom with tgt cell replaced by given new cell, or nil."
+  (if (not (and rmom rtgt rnew
+                (listp rmom)
+                (listp rtgt)
+                (listp rnew)))
+    rmom
+    (if (eq rmom rtgt)
+      rnew
+      (cons (make_kid (car rmom) rtgt rnew)
+            (make_kid (cdr rmom) rtgt rnew)))))
 
 (defun get_front_upto_nth ( rn rlist )
  "Return list head from 0-th thru N-th elt. Assumes elt-n is unique."
  (let ((elt-n (nth rn rlist)))
  (reverse (member elt-n (reverse rlist))))) 
-
-;(defun get_fitness (rcritter)
-; "Get score for critter. Dummy fcn: just return its length."
-; (length rcritter))
-
-(defun mutate_critter (critter)
-    (setq new_critter critter)
-    (setq change_pos (random (length critter)))
-    ;(terpri)
-    ;(write (nth change_pos new_critter))
-    ;(terpri)
-    (setq op (random 3))
-    (setq curnum (- (random 22) 9))
-    (cond 
-        ((= change_pos 0)
-        (if (= op 0) (setq newop '+))
-        (if (= op 1) (setq newop '-))
-        (if (= op 2) (setq newop '*))
-        ;(if (eq (car critter) newop)
-        ;(mutate_critter critter))
-        (setq new_critter (append (list newop) (cdr critter))))
-        ((> change_pos 0); (or (eq (nth change_pos new_critter) 'x)(eq (nth change_pos new_critter) 'y)(eq (nth change_pos new_critter) 'z)(numberp (nth change_pos new_critter))))
-            ;(write "HERE")
-            ;(write curnum)
-            (cond
-            ((= curnum -10) (setf curnum 'x ))
-            ((= curnum -11) (setf curnum 'y ))
-            ((= curnum -12) (setf curnum 'z ))
-            ((= curnum 10) (setf curnum 'x ))
-            ((= curnum 11) (setf curnum 'y ))
-            ((= curnum 12) (setf curnum 'z )))
-            ;(write "FINISHED")
-            ;(terpri)
-            ;(write curnum)
-            ; (terpri)
-            (setf (nth change_pos new_critter) curnum)))
-            
-    (return-from mutate_critter new_critter)
-    )
-
-
-
-
-(defun create_random_child (passed)
-    (setq child passed)
-    (setq op (random 3))
-    (if (= op 0) (setq newop '+))
-    (if (= op 1) (setq newop '-))
-    (if (= op 2) (setq newop '*))
-    (setf newlist (append '() (list newop)))
-    (setf numele (random 3))
-    (loop while(>= numele 0) do
-        (setq curnum (- (random 22) 9))
-        (case curnum
-            (-10 (setq curnum 'x ))
-            (-11 (setq curnum 'y ))
-            (-12 (setq curnum 'z ))
-            (10 (setq curnum 'x ))
-            (11 (setq curnum 'y ))
-            (12 (setq curnum 'z )))
-        (nconc newlist (list curnum))
-        (decf numele))
-    
-    (if (not passed)
-       (setq child (append child  newlist))
-       (setq child (append child (list newlist))))
-    ;(print child)
-    (setf try-again (random 5))
-    (if (= try-again 0)
-        (create_random_child child))
-    (return-from create_random_child child))
-
-(defun pop_fitness ( rpop ) ;; Pop is a population.
- "Create Pop-Scored pairs (Score Critter) given Pop list of critters."
- (mapcar #'(lambda (critter)
- (let ((score (get_fitness critter)))
- (list score critter)))
- rpop))
 
 (defun safe_sort_scored_pop ( rscored-pop )
  "Return a sorted list of scored-critter elts. Don't change given list.
@@ -198,6 +139,68 @@
  "Return just the Pop of critters from the Scored Pop."
  ;;Alt: (mapcar #'(lambda (elt) (nth 1 elt)) rscored-pop)
  (mapcar #'cadr rscored-pop))
+
+;;; END PROVIDED FUNCTIONS ;;;
+
+
+(defun mutate_critter (critter)
+    "We pass in a critter to mutate, changing either than operator or an operand"
+    (setq new_critter critter) ;Create a copy of our critter
+    (setq change_pos (random (length critter))) ;Randomly select the mutation point
+    (setq op (random 3)) ;Randomly select the operation to change if selected
+    (setq curnum (- (random 22) 9)) ;Randomly select the operand to replace old if selected
+    (cond 
+        ((= change_pos 0) ;If selected point is 0 we change the operator with a randomly selected one
+        (if (= op 0) (setq newop '+))
+        (if (= op 1) (setq newop '-))
+        (if (= op 2) (setq newop '*))
+        (setq new_critter (append (list newop) (cdr critter)))) ;Set the new critter to be prepended by the new operation
+        ((> change_pos 0);If the position is not the operator we change with a number or variable at random
+            (cond
+            ((= curnum -10) (setf curnum 'x ))
+            ((= curnum -11) (setf curnum 'y ))
+            ((= curnum -12) (setf curnum 'z ))
+            ((= curnum 10) (setf curnum 'x ))
+            ((= curnum 11) (setf curnum 'y ))
+            ((= curnum 12) (setf curnum 'z )))
+            (setf (nth change_pos new_critter) curnum))) ;Set the new operand
+    (return-from mutate_critter new_critter) ;Return the resulting new critter
+    )
+
+
+
+
+(defun create_random_child (passed)
+    "Create a child at random"
+    (setq child passed) ;Set our current child to the passed child
+    (setq op (random 3)) ;Randomly select our operator
+    (if (= op 0) (setq newop '+))
+    (if (= op 1) (setq newop '-))
+    (if (= op 2) (setq newop '*))
+    (setf newlist (append '() (list newop))) ;Create a new list with our operator
+    (setf numele (random 3)) ;Randomly select how many elements in our list
+    (loop while(>= numele 0) do ;Insert random numbers/variables for each element
+        (setq curnum (- (random 22) 9)) ;Get random number/variable
+        (case curnum
+            (-10 (setq curnum 'x ))
+            (-11 (setq curnum 'y ))
+            (-12 (setq curnum 'z ))
+            (10 (setq curnum 'x ))
+            (11 (setq curnum 'y ))
+            (12 (setq curnum 'z )))
+        (nconc newlist (list curnum)) ;Create a new list with our numbers
+        (decf numele)) ;Decrement
+    
+    (if (not passed) ;If not NIL then we want to create a normal list else create a deep list
+       (setq child (append child  newlist))
+       (setq child (append child (list newlist))))
+    (setf try-again (random 5)) ;Randomly try again to build a deeper list
+    (if (= try-again 0)
+        (create_random_child child))
+    (return-from create_random_child child)) ;Return our critter
+
+
+
 
 (defun flatten (structure)
   "Provided by https://rosettacode.org/wiki/Flatten_a_list#Common_Lisp"
@@ -213,90 +216,67 @@
  (abs delta))
 
 (defun mate_population (pop)
-  (let* ((n0 (random (/ 50 2)))
-         (n1 (random (/ 50 2)))
+    "Pass the whole population to decide and mate"
+  (let* ((n0 (random (/ pop-size 2))) ;Randomly select elements to mate
+         (n1 (random (/ pop-size 2)))
          (parent0 (nth n0 pop))
          (parent1 (nth n1 pop))
-         (next-gen (append pop (select_crossover parent0 parent1))))
-    (if (< (length pop) (- (length pop) 2))
+         (pop (remove parent0 pop)) ;Remove from population after selection
+         (pop (remove parent1 pop))
+         (next-gen (append pop (select_crossover parent0 parent1)))) ;Append to pop our crossover child
+    (if (< (length pop) (- pop-size 2))
       (mate_population next-gen)
-      next-gen)))
+      next-gen))) ;Return our new generation
 
 
 (defun select_crossover (mom0 mom1)
-    ;(write mom0)
-    (terpri)
-    (setq cell0 (random_tree_cell mom0))
-    ;(write mom0)
-    (terpri)
+    "Select the crossover of the children and cross"
+    (setq cell0 (random_tree_cell mom0)) ;Select random cells to cross over
     (setq cell1 (random_tree_cell mom1))
-    (setq child0 (make_kid mom0 cell0 cell1))
+    (setq child0 (make_kid mom0 cell0 cell1)) ;Make a kid based on the mom/cells
     (setq child1 (make_kid mom1 cell1 cell0))
-    (setq mutate-or-not (random 10))
-    (setq pick-child (random 2))
-    (if (= mutate-or-not 0)
+    (setq mutate-or-not (random 10)) ;Randomly mutate
+    (setq pick-child (random 2)) ;Randomly pick a child to mutate
+    (if (= mutate-or-not 3)
         (cond
-            ((= pick-child 0)(setq child0 (mutate_critter child0)))
-            ((= pick-child 1)(setq child1 (mutate_critter child1)))))
+            ((= pick-child 0)(setq child0 (mutate_critter child0))) ;Mutate child0
+            ((= pick-child 1)(setq child1 (mutate_critter child1))))) ;Mutate child1
         (return-from select_crossover (list child0 child1))
     )
 
-
+(defun add_total_score (scored-pop)
+    "Given the sorted population with fitness, return the total fitness, help from Scott Kim"
+    (if (not (equal (length scored-pop) 0))
+        (progn
+            (+ (car (car scored-pop)) (add_total_score (cdr scored-pop)))) ;Add up the scored fitness
+        0))
 
 (defun main (n term)
     (progn
-        (setf curgen 0)
-        
-        (setq pop ())
-        (loop while(< (length pop) n) do
-        (setf pop (append pop (list (create_random_child '())))))
-        (loop while(< curgen term) do
-              (setf curgen (+ curgen 1))
-              (setq best (pop_fitness pop))
-              (setq best-sorted (safe_sort_scored_pop best))
-              (setq best-from-pop (first best-sorted))
-              (write best-from-pop)
+        (setf curgen 0) ;Set current generation to 0
+        (setq pop ()) ;Initialize NIL population
+        (loop while(< (length pop) n) do ;While pop is less than the pop-size add more critters
+        (setf pop (append pop (list (create_random_child '()))))) ;Append a random critter to the population
+        (loop while(< curgen term) do ;While generations are not done continue
+              (setf curgen (+ curgen 1)) ;Add 1 to generation count
+              (format t "Generation #~D" curgen)
+              (terpri)
+              (setq best (pop_fitness pop)) ;Get the population fitness
+              (setq best-sorted (safe_sort_scored_pop best)) ;Sort the population by fitness
+              (setq best-from-pop (first best-sorted)) ;Get the best from pop
+              (setq worst-from-pop (last best-sorted)) ;Get worst from pop
+              (setq avg-fitness (eval (/ (float (add_total_score best-sorted)) (float 50)))) ;Calculate average fitness of generation
+              (format t "Average Fitness: ~#D" avg-fitness);Write avg fitness
+              (terpri)
+              (format t "Best from current generation: ~#D" best-from-pop)
+              (terpri)
+              (format t "Worst from current generation: ~#D" worst-from-pop)
+              (terpri)
+              (format t "Current generation:")
               (write pop)
+              (terpri)
               (setq best-next-gen (get_front_upto_nth (- (/ n 2) 1) best-sorted))
               (setq surviving-pop (get_pop_from_scored best-next-gen))
-              (setq pop (mate_population surviving-pop))
-              
-              (terpri))
+              (setq pop (mate_population surviving-pop)))
         ))
-(main 50 20)
-
-
-;;(progn
-;; (do until current pool filled ;; init population xx
-;; create new expr xx
-;; add expr to current pool ) xx
-;; (do until exceed terminal generation count xx
-;;; bump generation count xx
-;; (for each expr in current pool xx
-;; calc fitness for expr ) xx
-;; save a copy of most fit expr for this generation xx
-;; (do until no more exprs in current pool
-;; select 2 exprs as parents
-;; remove parents from current pool
-;; select crossover point/node in each parent
-;;make crossed kids
-;; expose each kid to mutattion
-;;add kids to next pool )
-;;current pool = next pool ))
-
-
-
-                    ;(write "Population")
-                    ;(write pop)
-                    ;(terpri)
-                    ;(write "Mom1")
-                    ;(write r-mom0)
-                    ;(terpri)
-                    ;(write "Mom2")
-                    ;(write r-mom1)
-                    ;(terpri)
-                    ;(write "Crossover")
-                    ;(write (select_crossover r-mom0 r-mom1))
-                    ;(terpri)
-
-
+(main pop-size 50) ;Start program from main
