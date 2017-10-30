@@ -119,13 +119,14 @@
 
 
 
-(defun create_random_child ()
-    (setq child())
+(defun create_random_child (passed)
+    (print passed)
+    (setq child passed)
     (setq op (random 3))
     (if (= op 0) (setq newop '+))
     (if (= op 1) (setq newop '-))
     (if (= op 2) (setq newop '*))
-    (setf child (append child (list newop)))
+    (setf newlist (append '() (list newop)))
     (setf numele (random 3))
     (loop while(>= numele 0) do
         (setq curnum (- (random 22) 9))
@@ -136,9 +137,17 @@
             (10 (setq curnum 'x ))
             (11 (setq curnum 'y ))
             (12 (setq curnum 'z )))
-        (nconc child (list curnum))
+        (nconc newlist (list curnum))
         (decf numele))
-        (return-from create_random_child child))
+    (print newlist)
+    (if (eq child nil)
+       (print "here")
+        (setq child (append child (list newlist))))
+    (print "CHILD")(terpri)(print child)
+    (setf try-again (random 5))
+    (if (= try-again 0)
+        (create_random_child child))
+    (return-from create_random_child child))
 
 (defun pop_fitness ( rpop ) ;; Pop is a population.
  "Create Pop-Scored pairs (Score Critter) given Pop list of critters."
@@ -190,7 +199,7 @@
         
         (setq pop ())
         (loop while(< (length pop) n) do
-        (setf pop (append pop (list (create_random_child )))))
+        (setf pop (append pop (list (create_random_child '())))))
         (loop while(< curgen term) do
               (setf curgen (+ curgen 1))
               (setq best (pop_fitness pop))
