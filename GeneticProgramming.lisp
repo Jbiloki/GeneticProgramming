@@ -1,10 +1,7 @@
 ;gnu clisp 2.49
 
-;Authors/Contact Info:
+;Author:
 ;   Jacob Biloki
-;   Email: Bilokij@csu.fullerton.edu
-;   CWID: 891882573
-;   Joshua Christ
 
 ; Program:
 ; This program implements genetic programming to generate a random population of critters. Over generations the best
@@ -12,11 +9,8 @@
 ; converge to it.
 
 
-;Set your golden critter here
-(setq x -4)
-(setq y -5)
-(setq z -3)
-(setq output 58)
+
+
 
 ;Set population size global variable
 (setq pop-size 50)
@@ -279,4 +273,21 @@
               (setq surviving-pop (get_pop_from_scored best-next-gen))
               (setq pop (mate_population surviving-pop)))
         ))
-(main pop-size 50) ;Start program from main
+
+
+
+(setq args *args*)
+(setq x (car args))
+(setq y (car (cdr args)))
+(setq z (car (cdr(cdr args))))
+(setq output (car(cdr(cdr(cdr args)))))
+(setq pop-size (car(cdr(cdr(cdr(cdr args))))))
+(setq generations (car(cdr(cdr(cdr(cdr(cdr args)))))))
+(setq x (parse-integer x))
+(setq y (parse-integer y))
+(setq z (parse-integer z))
+(setq output (parse-integer output))
+(setq pop-size (parse-integer pop-size))
+(setq generations (parse-integer generations))
+(format t "~d ~d ~d ~d ~d ~d" x y z output pop-size generations)
+(main pop-size generations) ;Start program from main
